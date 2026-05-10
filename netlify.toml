@@ -2,7 +2,13 @@
   publish = "frontend"
   functions = "netlify/functions"
 
+[functions]
+  node_bundler = "esbuild"
+
 [[redirects]]
   from = "/api/generate-risks"
   to = "/.netlify/functions/generate-risks"
   status = 200
+
+[functions."generate-risks"]
+  timeout = 30
