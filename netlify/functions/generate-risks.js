@@ -71,7 +71,7 @@ Constraints: ${constraints || ""}`;
 function callAnthropic(apiKey, userPrompt) {
   const requestBody = JSON.stringify({
     model: "claude-haiku-4-5-20251001",
-    max_tokens: 1500,
+    max_tokens: 2500,
     system: "Return ONLY valid JSON. No markdown, no backticks, no extra text whatsoever.",
     messages: [{ role: "user", content: userPrompt }],
   });
