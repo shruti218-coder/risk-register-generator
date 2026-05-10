@@ -1,0 +1,8 @@
+[build]
+  publish = "frontend"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/generate-risks"
+  to = "/.netlify/functions/generate-risks"
+  status = 200
