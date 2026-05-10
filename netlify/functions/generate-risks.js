@@ -1,6 +1,8 @@
 const https = require("https");
 
 exports.handler = async function (event, context) {
+  context.callbackWaitsForEmptyEventLoop = false;
+
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
@@ -34,28 +36,20 @@ exports.handler = async function (event, context) {
     return { statusCode: 400, headers, body: JSON.stringify({ error: "Project name or scope required" }) };
   }
 
-  const userPrompt = `Generate a risk register for the project below. Reply with ONLY valid JSON — no markdown, no backticks, no preamble.
+  const userPrompt = `Generate a risk register. Return ONLY valid JSON, no markdown, no extra text.
 
-JSON shape:
-{"risks":[{"id":"R01","title":"5-8 word title","category":"Internal|External|Technical|Project Management","subcategory":"e.g. Scope Creep","likelihood":1,"impact":1,"score":1,"severity":"Critical|High|Medium|Low","description":"2 sentences.","mitigation_steps":["step1","step2","step3"],"contingency":"1-2 sentences.","owner":"Role"}],"summary":"2-sentence executive summary."}
+JSON: {"risks":[{"id":"R01","title":"title","category":"Internal|External|Technical|Project Management","subcategory":"type","likelihood":3,"impact":4,"score":12,"severity":"High","description":"2 sentences.","mitigation_steps":["step1","step2","step3"],"contingency":"1 sentence.","owner":"Role"}],"summary":"2 sentences."}
 
-Category rules:
-- Internal = scope creep, unclear requirements, resource availability, stakeholder alignment
-- External = vendor risk, regulatory changes, third-party dependencies
-- Technical = architecture, integrations, data quality, security
-- Project Management = schedule, budget, governance, change management
+Categories: Internal=scope/requirements/resources, External=vendors/regulation, Technical=integrations/data/security, Project Management=schedule/budget/governance.
+Severity: 20-25=Critical,12-19=High,6-11=Medium,1-5=Low. Generate 6 risks max. Sort by score desc.
 
-Severity: 20-25=Critical,12-19=High,6-11=Medium,1-5=Low. Generate 7-9 risks covering all 4 categories. Sort by score descending.
-
-PROJECT DETAILS:
-Project name: ${projectName || "Not specified"}
-Timeline: ${timeline || "Not specified"}
-Budget: ${budget || "Not specified"}
-Team size: ${teamSize || "Not specified"}
-Sponsor: ${sponsor || "Not specified"}
-Scope: ${scope || "Not specified"}
-Assumptions: ${assumptions || "Not specified"}
-Constraints: ${constraints || "Not specified"}`;
+Project: ${projectName || ""}
+Timeline: ${timeline || ""}
+Budget: ${budget || ""}
+Team: ${teamSize || ""}
+Scope: ${scope || ""}
+Assumptions: ${assumptions || ""}
+Constraints: ${constraints || ""}`;
 
   try {
     const result = await callAnthropic(apiKey, userPrompt);
@@ -76,9 +70,9 @@ Constraints: ${constraints || "Not specified"}`;
 
 function callAnthropic(apiKey, userPrompt) {
   const requestBody = JSON.stringify({
-    model: "claude-sonnet-4-5",
-    max_tokens: 2000,
-    system: "You are a senior program manager and risk analyst. Return ONLY valid JSON with no markdown, backticks, or extra text.",
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 1500,
+    system: "Return ONLY valid JSON. No markdown, no backticks, no extra text whatsoever.",
     messages: [{ role: "user", content: userPrompt }],
   });
 
