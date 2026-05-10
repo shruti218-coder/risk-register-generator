@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk Register Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #171717;
+    --surface2: #1f1f1f;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0ede8;
+    --text2: #9a9690;
+    --text3: #5a5753;
+    --accent: #c8a96e;
+    --accent2: #e8c98e;
+    --critical: #ff6b6b;
+    --high: #ffaa4a;
+    --medium: #6bce8a;
+    --low: #5ba3f5;
+    --internal: #b19cf0;
+    --external: #f0b96b;
+    --technical: #6bcfb0;
+    --pm: #9a9690;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Instrument Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px; position: sticky; top: 0;
+    background: rgba(15,15,15,0.92); backdrop-filter: blur(12px); z-index: 100;
+  }
+  .logo { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--accent); letter-spacing: -0.01em; }
+  .logo span { color: var(--text2); font-style: italic; font-size: 14px; margin-left: 8px; }
+  .header-tag { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); border: 1px solid var(--border2); padding: 3px 10px; border-radius: 99px; letter-spacing: 0.06em; }
+
+  .page { max-width: 960px; margin: 0 auto; padding: 3rem 2rem 5rem; }
+
+  .hero { margin-bottom: 3rem; }
+  .hero-eyebrow { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+  .hero h1 { font-family: 'DM Serif Display', serif; font-size: clamp(32px, 5vw, 52px); line-height: 1.1; color: var(--text); letter-spacing: -0.02em; margin-bottom: 14px; }
+  .hero h1 em { color: var(--accent); font-style: italic; }
+  .hero p { font-size: 15px; color: var(--text2); max-width: 520px; line-height: 1.7; }
+
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 2.5rem; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text2); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2rem; margin-bottom: 2rem; }
+  .form-card h2 { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); letter-spacing: -0.01em; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+  label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); }
+  input, textarea {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 10px 13px; font-family: 'Instrument Sans', sans-serif; font-size: 14px;
+    color: var(--text); transition: border-color 0.15s; width: 100%;
+  }
+  input::placeholder, textarea::placeholder { color: var(--text3); }
+  input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
+  textarea.tall { min-height: 120px; }
+
+  .actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 1.5rem; }
+  .btn-primary { background: var(--accent); color: #0f0f0f; border: none; padding: 11px 24px; border-radius: var(--radius); font-family: 'Instrument Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background 0.15s, transform 0.1s; }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border2); padding: 10px 20px; border-radius: var(--radius); font-family: 'Instrument Sans', sans-serif; font-size: 13px; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  .status-bar { display: none; align-items: center; gap: 10px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); font-size: 13px; color: var(--text2); margin-bottom: 2rem; }
+  .status-bar.visible { display: flex; }
+  .status-bar.error { border-color: rgba(255,107,107,0.3); color: var(--critical); }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #results { display: none; }
+  .results-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 1.5rem; }
+  .results-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--text); letter-spacing: -0.01em; }
+  .results-project { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+  .metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; }
+  .metric-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+  .metric-value { font-size: 28px; font-weight: 600; line-height: 1; }
+
+  .exec-summary { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 1.5rem; font-size: 14px; color: var(--text2); line-height: 1.7; }
+
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .filter-pill { padding: 5px 14px; border-radius: 99px; border: 1px solid var(--border2); background: transparent; font-family: 'Instrument Sans', sans-serif; font-size: 12px; font-weight: 500; color: var(--text2); cursor: pointer; transition: all 0.15s; }
+  .filter-pill:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-pill.on { border-color: var(--accent); color: var(--accent); background: rgba(200,169,110,0.08); }
+
+  .risk-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 10px; overflow: hidden; transition: border-color 0.15s; }
+  .risk-card:hover { border-color: var(--border2); }
+  .risk-card-head { padding: 16px 18px 14px; cursor: pointer; user-select: none; }
+  .risk-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .risk-id { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); margin-bottom: 3px; }
+  .risk-title { font-size: 15px; font-weight: 500; color: var(--text); }
+  .risk-badges { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+  .badge { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.05em; padding: 3px 10px; border-radius: 99px; font-weight: 500; border: 1px solid; }
+  .risk-meta { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 10px; }
+  .meta-item { font-size: 12px; color: var(--text3); }
+  .meta-item strong { color: var(--text2); font-weight: 500; }
+  .bar-wrap { height: 3px; background: rgba(255,255,255,0.06); border-radius: 99px; }
+  .bar-fill { height: 3px; border-radius: 99px; }
+  .chev { font-size: 18px; color: var(--text3); transition: transform 0.2s; flex-shrink: 0; line-height: 1; }
+  .chev.open { transform: rotate(90deg); }
+
+  .risk-card-body { border-top: 1px solid var(--border); padding: 18px; display: none; background: var(--bg); }
+  .risk-card-body.open { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .body-section h4 { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
+  .body-section p { font-size: 13px; color: var(--text2); line-height: 1.7; }
+  .body-section.full { grid-column: 1 / -1; }
+
+  .mitigation-list { list-style: none; padding: 0; margin: 0; }
+  .mitigation-list li { font-size: 13px; color: var(--text2); line-height: 1.6; padding: 6px 0 6px 18px; position: relative; border-bottom: 1px solid var(--border); }
+  .mitigation-list li:last-child { border-bottom: none; }
+  .mitigation-list li::before { content: "→"; position: absolute; left: 0; color: var(--accent); }
+
+  .contingency-box { background: rgba(200,169,110,0.06); border: 1px solid rgba(200,169,110,0.2); border-radius: var(--radius); padding: 12px 14px; font-size: 13px; color: var(--text2); line-height: 1.7; }
+
+  .export-row { display: flex; gap: 10px; margin-top: 1.5rem; flex-wrap: wrap; }
+
+  @media (max-width: 680px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid-2 { grid-template-columns: 1fr; }
+    .metrics { grid-template-columns: repeat(2,1fr); }
+    .risk-card-body.open { grid-template-columns: 1fr; }
+    .page { padding: 2rem 1rem 4rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">RiskGen <span>by Claude</span></div>
+  <div class="header-tag">AI-POWERED · PM TOOLKIT</div>
+</header>
+
+<div class="page">
+  <div class="hero">
+    <div class="hero-eyebrow">Project Risk Intelligence</div>
+    <h1>Turn your project brief<br>into a <em>risk register</em></h1>
+    <p>Fill in your project details below. The AI will generate a scored, categorized risk register with mitigation plans and contingency actions — ready to export.</p>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--internal)"></div>Internal — scope, requirements, resources, stakeholder alignment</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--external)"></div>External — vendors, regulation, market, third-party</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--technical)"></div>Technical — architecture, integrations, data, security</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--pm)"></div>Project Management — schedule, budget, governance, change</div>
+  </div>
+
+  <div class="form-card">
+    <h2>Project details</h2>
+    <div class="form-grid">
+      <div class="field"><label>Project name</label><input type="text" id="f-name" placeholder="e.g. CRM Platform Migration" /></div>
+      <div class="field"><label>Timeline</label><input type="text" id="f-timeline" placeholder="e.g. 6 months, Jan–Jun 2026" /></div>
+      <div class="field"><label>Budget</label><input type="text" id="f-budget" placeholder="e.g. $480,000" /></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Team size</label><input type="text" id="f-team" placeholder="e.g. 12 people, 3 workstreams" /></div>
+      <div class="field"><label>Executive sponsor / stakeholders</label><input type="text" id="f-sponsor" placeholder="e.g. CRO, VP Engineering" /></div>
+    </div>
+    <div class="field" style="margin-bottom:16px">
+      <label>Scope — what is included in this project?</label>
+      <textarea class="tall" id="f-scope" placeholder="Describe what the project covers: deliverables, systems, processes, departments, users involved…"></textarea>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Assumptions</label><textarea id="f-assumptions" placeholder="List assumptions being made, e.g. data is clean, team is available full-time…"></textarea></div>
+      <div class="field"><label>Constraints</label><textarea id="f-constraints" placeholder="List hard constraints, e.g. must go live before fiscal year-end, fixed budget…"></textarea></div>
+    </div>
+    <div class="actions">
+      <button class="btn-primary" id="genBtn" onclick="generate()">⚡ Generate risk register</button>
+      <button class="btn-ghost" onclick="loadExample()">Load example</button>
+      <button class="btn-ghost" onclick="clearForm()">Clear</button>
+    </div>
+  </div>
+
+  <div class="status-bar" id="statusBar">
+    <div class="spinner" id="spinner"></div>
+    <span id="statusText">Analyzing project brief…</span>
+  </div>
+
+  <div id="results">
+    <div class="results-header">
+      <div>
+        <div class="results-title">Risk register</div>
+        <div class="results-project" id="resultsSubtitle"></div>
+      </div>
+      <div class="export-row">
+        <button class="btn-ghost" onclick="exportCSV()">↓ Export CSV</button>
+        <button class="btn-ghost" onclick="window.print()">↓ Print / PDF</button>
+      </div>
+    </div>
+    <div class="metrics" id="metrics"></div>
+    <div class="exec-summary" id="execSummary"></div>
+    <div class="filter-bar" id="filterBar"></div>
+    <div id="riskList"></div>
+  </div>
+</div>
+
+<script>
+// ── Example ──
+function loadExample() {
+  document.getElementById('f-name').value = 'CRM Platform Migration';
+  document.getElementById('f-timeline').value = '6 months (Jan–Jun 2026)';
+  document.getElementById('f-budget').value = '$480,000';
+  document.getElementById('f-team').value = '12 people across 3 workstreams';
+  document.getElementById('f-sponsor').value = 'CRO (Executive Sponsor)';
+  document.getElementById('f-scope').value = 'Migrating legacy CRM to Salesforce. Includes: data migration of 5 years of customer records, integration with 3 internal tools (billing, support ticketing, ERP), staff training for 200 users across 4 departments (Sales, Support, Finance, Operations), and a phased go-live starting with the Sales team.';
+  document.getElementById('f-assumptions').value = '- Customer data is reasonably clean\n- Legacy system remains stable during parallel run\n- Business SMEs available at least 20% time\n- Salesforce licences pre-approved\n- No major org restructure during project';
+  document.getElementById('f-constraints').value = '- Must complete before fiscal year-end\n- CRM vendor has 4-week implementation lead time\n- Budget fixed at $480K, no contingency reserve\n- Legacy system must stay live until all departments migrated\n- No additional headcount';
+}
+
+function clearForm() {
+  ['f-name','f-timeline','f-budget','f-team','f-sponsor','f-scope','f-assumptions','f-constraints'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('results').style.display = 'none';
+  setStatus('', false);
+}
+
+// ── Generate — calls Azure Function ──
+async function generate() {
+  const name        = document.getElementById('f-name').value.trim();
+  const timeline    = document.getElementById('f-timeline').value.trim();
+  const budget      = document.getElementById('f-budget').value.trim();
+  const teamSize    = document.getElementById('f-team').value.trim();
+  const sponsor     = document.getElementById('f-sponsor').value.trim();
+  const scope       = document.getElementById('f-scope').value.trim();
+  const assumptions = document.getElementById('f-assumptions').value.trim();
+  const constraints = document.getElementById('f-constraints').value.trim();
+
+  if (!name && !scope) { alert('Please fill in at least the project name and scope.'); return; }
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  setStatus('Analyzing project brief…', false);
+  document.getElementById('results').style.display = 'none';
+
+  try {
+    // Calls the Azure Function at /api/generate-risks
+    // (same domain, so no CORS issues when deployed to Azure Static Web Apps)
+    const resp = await fetch('/api/generate-risks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectName: name, timeline, budget, teamSize, sponsor, scope, assumptions, constraints })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || `Server error ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    setStatus('', false);
+    renderResults(data, name);
+  } catch (e) {
+    setStatus('Error: ' + e.message, true);
+  }
+
+  btn.disabled = false;
+}
+
+function setStatus(msg, isError) {
+  const bar = document.getElementById('statusBar');
+  const txt = document.getElementById('statusText');
+  if (!msg) { bar.classList.remove('visible', 'error'); return; }
+  bar.classList.add('visible');
+  bar.classList.toggle('error', isError);
+  document.getElementById('spinner').style.display = isError ? 'none' : 'block';
+  txt.textContent = msg;
+}
+
+// ── Colors ──
+const SEV_C = { Critical:'var(--critical)', High:'var(--high)', Medium:'var(--medium)', Low:'var(--low)' };
+const CAT_C = { Internal:'var(--internal)', External:'var(--external)', Technical:'var(--technical)', 'Project Management':'var(--pm)' };
+const BAR_C = { Critical:'#ff6b6b', High:'#ffaa4a', Medium:'#6bce8a', Low:'#5ba3f5' };
+let ALL = [];
+
+function renderResults(data, projectName) {
+  ALL = data.risks || [];
+  const crit = ALL.filter(r => r.severity==='Critical').length;
+  const high = ALL.filter(r => r.severity==='High').length;
+  const avg  = ALL.length ? Math.round(ALL.reduce((a,r) => a+r.score, 0) / ALL.length) : 0;
+
+  document.getElementById('resultsSubtitle').textContent = (projectName || 'Project') + ' · ' + ALL.length + ' risks identified';
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Total risks</div><div class="metric-value" style="color:var(--text)">${ALL.length}</div></div>
+    <div class="metric"><div class="metric-label">Critical</div><div class="metric-value" style="color:var(--critical)">${crit}</div></div>
+    <div class="metric"><div class="metric-label">High</div><div class="metric-value" style="color:var(--high)">${high}</div></div>
+    <div class="metric"><div class="metric-label">Avg score</div><div class="metric-value" style="color:var(--accent)">${avg}<span style="font-size:14px;color:var(--text3)">/25</span></div></div>`;
+  document.getElementById('execSummary').textContent = data.summary || '';
+  document.getElementById('filterBar').innerHTML = ['All','Internal','External','Technical','Project Management'].map(c =>
+    `<button class="filter-pill ${c==='All'?'on':''}" onclick="filterBy('${c}',this)">${c}</button>`).join('');
+  document.getElementById('riskList').innerHTML = makeCards(ALL);
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior:'smooth' });
+  window._riskData = data;
+}
+
+function makeCards(risks) {
+  return risks.map(r => {
+    const pct = Math.round((r.score/25)*100);
+    const sc = SEV_C[r.severity] || 'var(--text2)';
+    const cc = CAT_C[r.category] || 'var(--pm)';
+    const bc = BAR_C[r.severity] || '#888';
+    const steps = (r.mitigation_steps||[]).map(s=>`<li>${s}</li>`).join('');
+    return `<div class="risk-card" data-cat="${r.category}">
+      <div class="risk-card-head" onclick="tog(this)">
+        <div class="risk-top">
+          <div><div class="risk-id">${r.id}</div><div class="risk-title">${r.title}</div></div>
+          <div class="risk-badges">
+            <span class="badge" style="color:${sc};border-color:${sc}33">${r.severity}</span>
+            <span class="badge" style="color:${cc};border-color:${cc}33">${r.category}</span>
+            <span class="chev">›</span>
+          </div>
+        </div>
+        <div class="risk-meta">
+          <div class="meta-item">Likelihood <strong>${r.likelihood}/5</strong></div>
+          <div class="meta-item">Impact <strong>${r.impact}/5</strong></div>
+          <div class="meta-item">Score <strong>${r.score}/25</strong></div>
+          <div class="meta-item">Subcategory <strong>${r.subcategory}</strong></div>
+          <div class="meta-item">Owner <strong>${r.owner}</strong></div>
+        </div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:${bc}"></div></div>
+      </div>
+      <div class="risk-card-body">
+        <div class="body-section"><h4>Description</h4><p>${r.description}</p></div>
+        <div class="body-section"><h4>Mitigation plan</h4><ul class="mitigation-list">${steps}</ul></div>
+        <div class="body-section full"><h4>Contingency (if risk materialises)</h4><div class="contingency-box">${r.contingency}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function tog(h) { const b=h.nextElementSibling, c=h.querySelector('.chev'), o=b.classList.toggle('open'); if(c){c.classList.toggle('open',o);c.textContent=o?'⌄':'›';} }
+function filterBy(cat,btn) { document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); document.getElementById('riskList').innerHTML=makeCards(cat==='All'?ALL:ALL.filter(r=>r.category===cat)); }
+
+function exportCSV() {
+  if (!window._riskData) return;
+  const H = ['ID','Title','Category','Subcategory','Likelihood','Impact','Score','Severity','Owner','Description','Mitigation Steps','Contingency'];
+  const R = window._riskData.risks.map(r => [r.id,r.title,r.category,r.subcategory,r.likelihood,r.impact,r.score,r.severity,r.owner,r.description,(r.mitigation_steps||[]).join(' | '),r.contingency].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(','));
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent([H.join(','),...R].join('\n'));
+  a.download = 'risk-register.csv'; a.click();
+}
+</script>
+</body>
+</html>

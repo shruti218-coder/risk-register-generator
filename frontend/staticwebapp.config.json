@@ -1,0 +1,21 @@
+{
+  "routes": [
+    {
+      "route": "/api/*",
+      "allowedRoles": ["anonymous"]
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html"
+  },
+  "responseOverrides": {
+    "401": {
+      "redirect": "/.auth/login/aad",
+      "statusCode": 302
+    }
+  },
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "SAMEORIGIN"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "risk-register-api",
+  "version": "1.0.0",
+  "description": "Azure Functions backend for Risk Register Generator",
+  "main": "index.js",
+  "scripts": {
+    "start": "func start",
+    "test": "echo \"No tests yet\""
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
