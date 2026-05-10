@@ -1,6 +1,7 @@
 const https = require("https");
 
 module.exports = async function (context, req) {
+  
   context.log("Function invoked, method:", req.method);
 
   // CORS headers
