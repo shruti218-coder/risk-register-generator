@@ -76,7 +76,7 @@ Constraints: ${constraints || "Not specified"}`;
 
 function callAnthropic(apiKey, userPrompt) {
   const requestBody = JSON.stringify({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-5",
     max_tokens: 2000,
     system: "You are a senior program manager and risk analyst. Return ONLY valid JSON with no markdown, backticks, or extra text.",
     messages: [{ role: "user", content: userPrompt }],
